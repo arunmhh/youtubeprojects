@@ -1,0 +1,79 @@
+---
+title: "barplot"
+author: "codewithbiologits"
+date: "2026-03-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+```
+
+
+```{r}
+df_long <- iris %>%
+  pivot_longer(cols = 1:4, 
+               names_to = "feature", 
+               values_to = "value")
+df_long
+```
+
+```{r}
+df_sum <- df_long %>%
+  group_by(feature, Species) %>%
+  summarise(
+    n = n(),
+    mean = mean(value),
+    sd = sd(value),
+    se = sd / sqrt(n),
+    .groups = "drop"
+  )
+df_sum
+```
+
+
+```{r}
+comparisons <- list(
+  c("setosa","versicolor"),
+  c("setosa","virginica"),
+  c("versicolor","virginica")
+)
+```
+
+
+```{r}
+ggplot(df_long, aes(x = Species, y = value)) +
+  geom_col(
+    data = df_sum,
+    aes(x = Species, y = mean),
+    inherit.aes = FALSE
+  ) +
+  geom_errorbar(
+    data = df_sum,
+    aes(x = Species, ymin = mean - se, 
+        ymax = mean + se),
+    width = 0.2,
+    inherit.aes = FALSE
+  ) +
+  geom_jitter(width = 0.15, alpha = 0.5, size = 1) +
+  facet_wrap(~feature,scales = "free_y") +
+  ggpubr::stat_compare_means(
+    comparisons = comparisons,
+    method = "t.test",
+    p.adjust.method = "BH",
+    label = "p.signif") +
+  theme_classic()
+```
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

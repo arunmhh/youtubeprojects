@@ -1,0 +1,105 @@
+---
+title: "boxplot"
+author: "codewithbiologits"
+date: "2026-03-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#============================
+# 1 Boxplot
+#==========================
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+iris
+
+```
+
+
+```{r}
+ggplot(iris,
+       aes(x = Species, y = Sepal.Length,fill= Species))+
+  geom_boxplot(outlier.shape = NA, alpha = 0.6)+
+  geom_jitter(width = 0.2,alpha = 0.5)+
+  theme_classic()
+```
+
+#============================
+# 2 Normality test
+#==========================
+
+```{r}
+library(rstatix)
+iris %>% 
+  group_by(Species) %>% 
+  shapiro_test(Sepal.Length)
+```
+
+#===================================
+# qqplot for data point visulization
+#===================================
+
+```{r}
+library(ggpubr)
+ggqqplot(iris,
+         x = "Sepal.Length",
+         facet.by = "Species")
+```
+
+#==========================
+# 3  analysis of varience 
+#==========================
+```{r}
+levene_test(Sepal.Length ~ Species, 
+            data = iris)
+```
+
+#=================================
+# 4 Welch Anova test (one.way Anova)
+#=================================
+```{r}
+oneway.test(Sepal.Length ~ Species,
+            data = iris,
+            var.equal = FALSE)
+```
+
+#==============================
+# 5 Games-Howell post hoc test
+#==============================
+```{r}
+library(rstatix)
+stat_test <-  iris %>% 
+  games_howell_test(Sepal.Length ~ Species) %>% 
+  mutate(y.position = 7.3 + (row_number() - 1) * 0.75)
+stat_test
+```
+
+
+
+```{r}
+ggplot(iris,
+       aes(x = Species, y = Sepal.Length,fill= Species))+
+  geom_boxplot(outlier.shape = NA, alpha = 0.6)+
+  geom_jitter(width = 0.2,alpha = 0.5)+
+  scale_fill_brewer(palette = "Set2") +
+labs(title = "Sepal Length Across Species",
+     y = "Sepal Length (cm)") +
+  stat_pvalue_manual(stat_test,
+                     label = "p.adj.signif",
+                     tip.length = 0.02)+
+  theme_classic(base_size = 14)+
+  theme(
+  plot.title = element_text(
+    hjust = 0.5,   # 0.5 = center
+    face = "bold",
+    size = 16
+  ),
+  legend.position = "none"
+)
+```

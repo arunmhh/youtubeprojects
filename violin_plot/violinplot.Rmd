@@ -1,0 +1,179 @@
+---
+title: "violinplot"
+author: "codewithbiologits"
+date: "2026-03-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##########################################################
+##### Violin Plot ##########
+
+#=========================================
+# step 1: load libraries
+#=========================================
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(rstatix)
+library(ggpubr)
+```
+
+
+
+
+
+
+
+
+#=========================================
+# step 2: load data and visulize data
+#=========================================
+```{r}
+iris
+```
+
+
+
+```{r}
+boxplot(Sepal.Width ~ Species, data = iris, col = "lightblue")
+```
+
+
+
+
+
+
+
+
+
+
+#================================================
+# step 3: Normality Test (Shapiro-Wilk per group)
+#================================================
+
+```{r}
+normality_test <- iris %>%
+  group_by(Species) %>%
+  shapiro_test(Sepal.Width)
+
+normality_test
+```
+
+
+
+#================================================
+# step 4: check data with qqplot
+#================================================
+
+```{r}
+ggpubr::ggqqplot(iris, x = "Sepal.Width",
+                 facet.by = "Species")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+#================================================
+# step 5: Homogeneity of Variance (Levene’s Test)
+#================================================
+
+```{r}
+variance_test <- iris %>%
+  levene_test(Sepal.Width ~ Species)
+
+variance_test
+```
+
+
+
+
+
+
+
+
+
+
+
+#================================================
+# step 6: (ANOVA)
+#================================================
+
+```{r}
+anova_res <- iris %>%
+  anova_test(Sepal.Width ~ Species)
+
+anova_res
+```
+
+
+
+
+
+
+
+
+
+
+
+
+#====================================================
+# step 7: apply statistical test pair-wise comparsion
+#====================================================
+
+```{r}
+stat_test <- iris %>%
+  rstatix::pairwise_t_test(Sepal.Width ~ Species,
+                           p.adjust.method = "BH") %>%
+  mutate(y.position = 5 + (row_number() - 1) * 0.35)
+
+stat_test
+```
+
+
+
+
+
+
+
+
+
+
+#=========================================
+# step 8: Prepare the violin plot
+#=========================================
+
+```{r}
+ggplot(iris, 
+       aes(x = Species, y = Sepal.Width, fill = Species)) +
+  geom_violin(trim = FALSE, color = "black", linewidth = 1) +
+  geom_boxplot(width = 0.2, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.6, size = 1) +
+  stat_summary(fun = mean, geom = "point", 
+               shape = 21, 
+               size = 2,
+               colour = "red", 
+               fill = "white") +
+  scale_fill_brewer(palette = "Accent") +
+  ggpubr::stat_pvalue_manual(stat_test, 
+                             label = "p.adj.signif", 
+                             tip.length = 0.02) +
+  scale_y_continuous(limits = c(0, 5.8)) +  
+  theme_classic() +
+  theme(legend.position = "none")
+```
+
+
+####### END ######

@@ -1,0 +1,113 @@
+---
+title: "group_barplot"
+author: "codewithbiologits"
+date: "2026-03-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(rstatix)
+library(ggpubr)
+```
+
+
+
+
+
+
+
+
+```{r}
+df_long <- iris %>%
+  pivot_longer(cols = 1:4, 
+               names_to = "feature", 
+               values_to = "value")
+df_long
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
+df_sum <- df_long %>%
+  group_by(Species, feature) %>%
+  summarise(
+    n = n(),
+    mean = mean(value),
+    sd = sd(value),
+    se = sd / sqrt(n),
+    .groups = "drop"
+  )
+df_sum
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+## calculate stat for df_long data ##
+
+```{r}
+stat_test <- df_long %>%
+  group_by(Species) %>%
+  rstatix::pairwise_t_test(value ~ feature, 
+                           p.adjust.method = "BH") %>%
+  rstatix::add_y_position(fun = "max", 
+                          step.increase = 0.08)
+stat_test 
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+ggplot(df_sum, aes(x = feature, y = mean)) +
+  geom_col(width = 0.7) +
+  geom_errorbar(aes(ymin = mean - se, 
+                    ymax = mean + se), 
+                    width = 0.2) +
+  facet_wrap(~Species, nrow = 1, 
+             scales = "free_y") +
+  stat_pvalue_manual(stat_test, 
+                     label = "p.adj.signif", 
+                     tip.length = 0.01) +
+  theme_classic() +
+  labs(x = "Feature", y = "Mean (± SEM)")+
+  theme(axis.text.x = element_text(angle = 45, 
+                                   hjust = 1, 
+                                   vjust = 1))
+```
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
