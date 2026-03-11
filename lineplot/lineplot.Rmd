@@ -1,0 +1,219 @@
+---
+title: "lineplots"
+author: "codewithbiologits"
+date: "2026-03-08"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#=================================================
+# How to create lineplots 
+#=================================================
+
+
+
+
+
+
+#===============================
+# 1 load libraries 
+#===============================
+
+```{r}
+library(tidyverse)
+library(readr)
+library(readxl)
+library(purrr)
+library(janitor)
+library(ggplot2)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+#=========================================
+# step 2: load data and visulize data
+#=========================================
+```{r}
+iris
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#=====================================================
+# step3 : Convert Data from Wide Format to Long Format
+#=====================================================
+
+```{r}
+library(tidyverse)
+
+iris_long <- iris %>%
+  pivot_longer(
+    cols = c(Sepal.Length, Sepal.Width),
+    names_to = "Measurement",
+    values_to = "Value"
+  )
+
+head(iris_long)
+```
+
+
+
+
+
+
+
+
+
+
+
+#=====================================
+# step4 : Calculate Summary Statistics
+#=====================================
+
+```{r}
+iris_summary <- iris_long %>%
+  group_by(Species, Measurement) %>%
+  summarise(
+    mean_value = mean(Value),
+    sd_value = sd(Value),
+    .groups = "drop"
+  )
+iris_summary 
+```
+
+
+
+
+
+
+
+
+
+
+#=====================================
+# step5 : Create the Line Plot
+#=====================================
+
+```{r}
+ggplot(iris_long, aes(x = Species, y = Value, color = Measurement)) +
+  geom_jitter(width = 0.15, alpha = 0.5) +
+  geom_line(data = iris_summary,
+            aes(x = Species, y = mean_value, 
+                group = Measurement, 
+                color = Measurement),
+                linewidth = 1,
+               inherit.aes = FALSE) +
+  geom_point(data = iris_summary,
+             aes(x = Species, y = mean_value, 
+                 color = Measurement),
+                size = 3,
+                inherit.aes = FALSE) +
+  geom_errorbar(data = iris_summary,
+                aes(x = Species,
+                    ymin = mean_value - sd_value,
+                    ymax = mean_value + sd_value,
+                    color = Measurement),
+                width = 0.15,
+                inherit.aes = FALSE) +
+
+  theme_classic()+
+  theme(
+    legend.position = "top"
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
